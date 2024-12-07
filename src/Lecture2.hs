@@ -322,7 +322,13 @@ data EvalError
 It returns either a successful evaluation result or an error.
 -}
 eval :: Variables -> Expr -> Either EvalError Int
-eval = error "TODO"
+eval vars expr = case expr of
+                   Lit x -> x
+                   Var v -> lookup v vars
+                   Add a b -> case a of
+                                EvalError a -> a
+
+
 
 {- | Compilers also perform optimizations! One of the most common
 optimizations is "Constant Folding". It performs arithmetic operations
