@@ -41,7 +41,8 @@ module Lecture2
     ) where
 
 -- VVV If you need to import libraries, do it after this line ... VVV
-
+import Data.Char(isSpace)
+import Data.List(splitAt)
 -- ^^^ and before this line. Otherwise the test suite might fail  ^^^
 
 {- | Implement a function that finds a product of all the numbers in
@@ -52,7 +53,13 @@ zero, you can stop calculating product and return 0 immediately.
 84
 -}
 lazyProduct :: [Int] -> Int
-lazyProduct = error "TODO"
+lazyProduct = go 1
+  where
+    go :: Int -> [Int] -> Int
+    go acc list =  case list of
+                     [] -> acc
+                     0 : _ -> 0
+                     x : xs -> go (acc * x) xs
 
 {- | Implement a function that duplicates every element in the list.
 
@@ -62,7 +69,12 @@ lazyProduct = error "TODO"
 "ccaabb"
 -}
 duplicate :: [a] -> [a]
-duplicate = error "TODO"
+duplicate = go [] . reverse
+  where
+    go :: [a] -> [a] -> [a]
+    go acc list = case list of
+                    [] -> acc
+                    x : xs -> go (x : x : acc) xs
 
 {- | Implement function that takes index and a list and removes the
 element at the given position. Additionally, this function should also
@@ -74,7 +86,19 @@ return the removed element.
 >>> removeAt 10 [1 .. 5]
 (Nothing,[1,2,3,4,5])
 -}
-removeAt = error "TODO"
+removeAt :: Int -> [a] -> (Maybe a, [a])
+removeAt = go []
+  where
+    go :: [a] -> Int -> [a] -> (Maybe a, [a])
+    go acc idx list
+      | idx < 0  = (Nothing, acc ++ list)
+      | idx == 0 = case list of
+                     [] -> (Nothing, acc)
+                     x:xs -> (Just x, acc ++ xs)
+      | idx > 0 = case list of
+                    [] -> (Nothing, acc)
+                    x:xs -> go (acc ++ [x]) (idx-1) xs
+
 
 {- | Write a function that takes a list of lists and returns only
 lists of even lengths.
@@ -85,7 +109,8 @@ lists of even lengths.
 ♫ NOTE: Use eta-reduction and function composition (the dot (.) operator)
   in this function.
 -}
-evenLists = error "TODO"
+evenLists :: [[a]] -> [[a]]
+evenLists = filter (even . length)
 
 {- | The @dropSpaces@ function takes a string containing a single word
 or number surrounded by spaces and removes all leading and trailing
@@ -101,7 +126,8 @@ spaces.
 
 🕯 HINT: look into Data.Char and Prelude modules for functions you may use.
 -}
-dropSpaces = error "TODO"
+dropSpaces :: [Char] -> [Char]
+dropSpaces = filter (not . isSpace)
 
 {- |
 
@@ -185,7 +211,14 @@ False
 True
 -}
 isIncreasing :: [Int] -> Bool
-isIncreasing = error "TODO"
+isIncreasing =  go (minBound::Int)
+  where
+    go :: Int -> [Int] -> Bool
+    go prev_min list = case list of
+                         [] -> True
+                         x : xs -> case x > prev_min of
+                                     True -> go x xs
+                                     False -> False
 
 {- | Implement a function that takes two lists, sorted in the
 increasing order, and merges them into new list, also sorted in the
@@ -198,7 +231,16 @@ verify that.
 [1,2,3,4,7]
 -}
 merge :: [Int] -> [Int] -> [Int]
-merge = error "TODO"
+merge = go []
+  where
+    go :: [Int] -> [Int] -> [Int] -> [Int]
+    go res list1 list2 = case (list1, list2) of
+                           ([] , _) -> res ++ list2
+                           (_ , []) -> res ++ list1
+                           (lx:lxs , rx:rxs) -> if lx < rx
+                                              then go (res ++ [lx]) lxs list2
+                                              else go (res ++ [rx]) list1 rxs
+
 
 {- | Implement the "Merge Sort" algorithm in Haskell. The @mergeSort@
 function takes a list of numbers and returns a new list containing the
@@ -215,12 +257,24 @@ The algorithm of merge sort is the following:
 [1,2,3]
 -}
 mergeSort :: [Int] -> [Int]
-mergeSort = error "TODO"
+mergeSort list = case list of
+                   [] -> list
+                   (x:[])  -> list
+                   (a:b:[]) -> if a > b
+                          then [b,a]
+                          else [a,b]
+                   _  -> let
+                             n1 = ((`div` 2) . length) list
+                             list1 = mergeSort (take n1 list)
+                             list2 = mergeSort (drop n1 list)
+                         in
+                           merge list1 list2
+
 
 
 {- | Haskell is famous for being a superb language for implementing
 compilers and interpreters to other programming languages. In the next
-tasks, you need to implement a tiny part of a compiler.
+tasks, you needx`` to implement a tiny part of a compiler.
 
 We're going to work on a small subset of arithmetic operations.
 
